@@ -261,8 +261,11 @@ export class AsciiRenderer {
         const z = depth[idx];
         const tag = this.ctag[idx];
         const c = idx % W;
+        // a material can ask for finer outlines (mat.outline), for flowers whose
+        // petals sit close together, like the layers of a rose
+        const gap = mat.outline ?? 0.12;
         const behind = (n) => this.cmat[n] >= 0 && this.kind[n] === SURFACE &&
-          depth[n] > z + (this.ctag[n] !== tag ? 0.12 : 0.3);
+          depth[n] > z + (this.ctag[n] !== tag ? gap : 0.3);
         if ((c > 0 && behind(idx - 1)) || (c < W - 1 && behind(idx + 1)) ||
             (idx >= W && behind(idx - W)) || (idx < W * (H - 1) && behind(idx + W))) {
           ao = 0.45;
