@@ -15,10 +15,20 @@
   --pad: clamp(20px, 5vw, 40px);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 480px), (max-height: 640px) {
   :root {
-    --gutter: 10px;
+    --gutter: 8px;
     --pad: 14px;
+  }
+}
+
+/* short screens (phones in landscape): drop the footer line, keep the button */
+@media (max-height: 520px) {
+  footer span {
+    display: none;
+  }
+  .card {
+    border-radius: 16px;
   }
 }
 
@@ -72,21 +82,27 @@ body[data-period="night"] {
 html,
 body {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
+/* The page is exactly as tall as the visible screen. On phones the address
+   bar comes and goes, so script keeps --app-height in step with the visible
+   viewport; dvh is the fallback before script runs. */
 body {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: 24px var(--gutter);
+  height: 100vh;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(var(--gutter), env(safe-area-inset-top)) max(var(--gutter), env(safe-area-inset-right))
+    max(var(--gutter), env(safe-area-inset-bottom)) max(var(--gutter), env(safe-area-inset-left));
   font-family: "Fraunces", Georgia, serif;
   color: var(--text);
   background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
   background-attachment: fixed;
   transition: background 1.2s ease;
-  overflow-x: hidden;
 }
 
 /* --- sky: sun / moon and stars --- */
@@ -155,8 +171,12 @@ body[data-period="night"] .orb {
 .card {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 720px;
+  height: 100%;
+  max-height: 1000px;
   padding: var(--pad);
   border-radius: 24px;
   background: var(--card);
@@ -166,8 +186,14 @@ body[data-period="night"] .orb {
   text-align: center;
 }
 
+header,
+figcaption,
+footer {
+  flex: none;
+}
+
 .date {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
   font-size: 0.78rem;
   letter-spacing: 0.14em;
@@ -178,7 +204,7 @@ body[data-period="night"] .orb {
 h1 {
   margin: 0;
   font-weight: 600;
-  font-size: clamp(2rem, 7vw, 3rem);
+  font-size: clamp(1.6rem, min(7vw, 5.5vh), 3rem);
   line-height: 1.1;
   color: var(--accent);
   transition: color 1.2s ease;
@@ -186,22 +212,36 @@ h1 {
 
 .note {
   max-width: 34ch;
-  margin: 12px auto 0;
+  margin: min(12px, 1.2vh) auto 0;
   font-style: italic;
-  font-size: clamp(1.02rem, 3.4vw, 1.2rem);
-  line-height: 1.5;
+  font-size: clamp(0.92rem, min(3.4vw, 2.4vh), 1.2rem);
+  line-height: 1.4;
   text-wrap: balance;
 }
 
+/* the bouquet takes whatever height the text leaves */
 .bouquet {
-  margin: 24px 0 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: min(18px, 1.8vh) 0 0;
 }
 
-/* the canvas is sized from script to a whole number of character cells */
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* sized from script to a whole number of character cells */
 #art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
   display: block;
-  margin: 0 auto;
-  max-width: 100%;
 }
 
 #art.bloom {
@@ -211,7 +251,7 @@ h1 {
 @keyframes bloom {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: scale(0.97);
     filter: blur(3px);
   }
   to {
@@ -222,8 +262,8 @@ h1 {
 }
 
 figcaption {
-  margin-top: 14px;
-  font-size: 0.92rem;
+  margin-top: min(10px, 1vh);
+  font-size: clamp(0.78rem, 1.8vh, 0.92rem);
   color: var(--muted);
 }
 
@@ -233,8 +273,8 @@ footer {
   gap: 8px 16px;
   align-items: center;
   justify-content: center;
-  margin-top: 22px;
-  padding-top: 18px;
+  margin-top: min(16px, 1.6vh);
+  padding-top: min(14px, 1.4vh);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
   font-size: 0.74rem;

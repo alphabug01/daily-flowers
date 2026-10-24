@@ -56,15 +56,24 @@ function bouquetDay(now) {
 const stage = { renderer: null, box: null, light: LIGHTS.morning, font: 10, cellW: 6, cellH: 12, dpr: 1, view: null };
 const colorCache = new Map();
 
+// Keep the page exactly the height of what's visible (mobile address bars
+// grow and shrink the viewport without the CSS units always following).
+function fitViewport() {
+  const h = window.visualViewport?.height ?? window.innerHeight;
+  document.documentElement.style.setProperty("--app-height", `${Math.round(h)}px`);
+}
+
 function layout() {
   if (!stage.renderer) return;
-  const width = canvas.parentElement.clientWidth;
-  const font = width < 480 ? 6 : 8;
+  const box = $("stage");
+  const width = box.clientWidth;
+  const height = box.clientHeight;
+  if (!width || !height) return;
+  const font = Math.min(width, height) < 420 ? 6 : 8;
   const cellW = font * 0.6;
   const cellH = font * 1.2;
-  const cols = Math.floor(width / cellW);
-  const height = Math.min(width * 1.15, window.innerHeight * 0.85);
-  const rows = Math.floor(height / cellH);
+  const cols = Math.max(20, Math.floor(width / cellW));
+  const rows = Math.max(10, Math.floor(height / cellH));
   const wpx = cols * cellW;
   const hpx = rows * cellH;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -180,13 +189,21 @@ $("copy").addEventListener("click", async () => {
 });
 
 let resizeTimer;
-window.addEventListener("resize", () => {
+function onResize() {
+  fitViewport();
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     layout();
     frame(performance.now());
-  }, 150);
-});
+  }, 120);
+}
+window.addEventListener("resize", onResize);
+window.addEventListener("orientationchange", onResize);
+window.visualViewport?.addEventListener("resize", onResize);
+// the card's text can change height (new note, font load), so watch the stage too
+new ResizeObserver(() => onResize()).observe($("stage"));
+
+fitViewport();
 
 render();
 setInterval(render, 60 * 1000);
