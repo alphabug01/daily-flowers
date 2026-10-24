@@ -71,3 +71,4 @@ Make a file like `js/flowers/lilies.js` (say `roses.js`) that exports the same
 things (`varieties`, `mixes`, `materials`, `bloom`, `bud`), then add it to the
 list in `js/flowers/index.js`. With more than one flower in the list, the site
 rotates through them day by day.
+# daily-flowers
