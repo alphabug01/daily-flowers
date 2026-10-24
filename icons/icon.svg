@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%">
+      <stop offset="0" stop-color="#4a2a4a"/>
+      <stop offset="1" stop-color="#1c1424"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffcf9e" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#ffcf9e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="petal" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#f6f0cf"/>
+      <stop offset=".18" stop-color="#e8327a"/>
+      <stop offset=".72" stop-color="#ec5a92"/>
+      <stop offset="1" stop-color="#fff0f6"/>
+    </linearGradient>
+    <linearGradient id="petalBack" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#e6dcb0"/>
+      <stop offset=".2" stop-color="#c41f62"/>
+      <stop offset=".75" stop-color="#d9447e"/>
+      <stop offset="1" stop-color="#fbd9e8"/>
+    </linearGradient>
+    <g id="p">
+      <path d="M0 0 C 34 -30 54 -120 0 -200 C -54 -120 -34 -30 0 0 Z"/>
+    </g>
+    <g id="spots" fill="#7d0b37">
+      <circle cx="-6" cy="-52" r="4"/><circle cx="7" cy="-64" r="3.5"/>
+      <circle cx="-9" cy="-78" r="3"/><circle cx="5" cy="-90" r="3.2"/>
+      <circle cx="-3" cy="-104" r="2.6"/><circle cx="10" cy="-44" r="3"/>
+    </g>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="250" r="230" fill="url(#glow)"/>
+
+  <g transform="translate(256 266) scale(1.1)">
+    <!-- back petals -->
+    <g fill="url(#petalBack)">
+      <use href="#p" transform="rotate(30)  scale(1.02)"/>
+      <use href="#p" transform="rotate(150) scale(1.02)"/>
+      <use href="#p" transform="rotate(270) scale(1.02)"/>
+    </g>
+    <!-- front petals -->
+    <g fill="url(#petal)">
+      <use href="#p" transform="rotate(-30)"/>
+      <use href="#p" transform="rotate(90)"/>
+      <use href="#p" transform="rotate(210)"/>
+    </g>
+    <!-- midrib stripes -->
+    <g stroke="#b8185a" stroke-width="5" stroke-linecap="round" fill="none" opacity=".75">
+      <path d="M0 -30 Q 3 -100 0 -170" transform="rotate(-30)"/>
+      <path d="M0 -30 Q 3 -100 0 -170" transform="rotate(90)"/>
+      <path d="M0 -30 Q 3 -100 0 -170" transform="rotate(210)"/>
+      <path d="M0 -30 Q 3 -100 0 -170" transform="rotate(30)" opacity=".6"/>
+      <path d="M0 -30 Q 3 -100 0 -170" transform="rotate(150)" opacity=".6"/>
+      <path d="M0 -30 Q 3 -100 0 -170" transform="rotate(270)" opacity=".6"/>
+    </g>
+    <!-- spots -->
+    <use href="#spots" transform="rotate(-30)"/>
+    <use href="#spots" transform="rotate(90)"/>
+    <use href="#spots" transform="rotate(210)"/>
+    <use href="#spots" transform="rotate(30)" opacity=".8"/>
+    <use href="#spots" transform="rotate(150)" opacity=".8"/>
+    <use href="#spots" transform="rotate(270)" opacity=".8"/>
+    <!-- throat -->
+    <circle r="26" fill="#f6f0cf" opacity=".9"/>
+    <!-- stamens -->
+    <g stroke="#c8d68a" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M0 0 Q 18 -40 40 -78"/>
+      <path d="M0 0 Q -18 -40 -40 -78"/>
+      <path d="M0 0 Q 40 -20 82 -30"/>
+      <path d="M0 0 Q -40 -20 -82 -30"/>
+      <path d="M0 0 Q 30 20 64 40"/>
+      <path d="M0 0 Q -30 20 -64 40"/>
+    </g>
+    <g fill="#a8401c">
+      <ellipse cx="40" cy="-80" rx="7" ry="13" transform="rotate(30 40 -80)"/>
+      <ellipse cx="-40" cy="-80" rx="7" ry="13" transform="rotate(-30 -40 -80)"/>
+      <ellipse cx="84" cy="-30" rx="7" ry="13" transform="rotate(70 84 -30)"/>
+      <ellipse cx="-84" cy="-30" rx="7" ry="13" transform="rotate(-70 -84 -30)"/>
+      <ellipse cx="66" cy="42" rx="7" ry="13" transform="rotate(120 66 42)"/>
+      <ellipse cx="-66" cy="42" rx="7" ry="13" transform="rotate(-120 -66 42)"/>
+    </g>
+    <!-- pistil -->
+    <path d="M0 0 Q -4 -50 0 -96" stroke="#9fc25a" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <circle cx="0" cy="-98" r="9" fill="#6f9a2e"/>
+  </g>
+</svg>

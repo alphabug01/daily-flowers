@@ -87,7 +87,9 @@ body[data-period="night"] {
   --stars: 1;
   --glare-x: 86%;
   --glare-y: 4%;
-  --glare: 0.07;
+  /* how full the moon is, 0 to 1; script sets it from tonight's phase */
+  --moon-lit: 0.5;
+  --glare: calc(0.03 + 0.07 * var(--moon-lit));
 }
 
 * {
@@ -146,9 +148,17 @@ body[data-period="night"] .orb {
   width: 70px;
   height: 70px;
   margin: -35px 0 0 -35px;
-  /* crescent moon */
+  /* the moon itself is an SVG of tonight's phase */
   background: transparent;
-  box-shadow: inset -16px 10px 0 0 var(--orb), 0 0 80px 10px var(--orb-glow);
+  box-shadow: none;
+}
+
+/* the glow hugs the lit part only, so it doesn't outline the dark side,
+   and grows with how full the moon is */
+.orb svg {
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 0 calc(6px + 14px * var(--moon-lit)) color-mix(in srgb, var(--orb-glow) calc(40% + 60% * var(--moon-lit)), transparent));
 }
 
 .stars {

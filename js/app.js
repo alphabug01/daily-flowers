@@ -3,6 +3,7 @@ import { AsciiRenderer } from "./scene/renderer.js";
 import { flowerForDay } from "./flowers/index.js";
 import { PERIODS, periodForHour } from "./messages.js";
 import { seeded, pick } from "./random.js";
+import { moonPhase, moonSvg } from "./moon.js";
 
 // The bouquet changes at 5 AM, when the morning starts, not at midnight.
 const NEW_BOUQUET_HOUR = 5;
@@ -184,6 +185,25 @@ function loop(time) {
 
 // ---- page content ----
 
+const orb = document.querySelector(".orb");
+
+// At night the orb is the moon in tonight's phase, and moonlight on the
+// bouquet and the glass is as strong as the moon is full.
+function showMoon(now, period) {
+  if (period !== "night") {
+    orb.innerHTML = "";
+    orb.removeAttribute("title");
+    document.body.style.removeProperty("--moon-lit");
+    return;
+  }
+  const moon = moonPhase(now);
+  orb.innerHTML = moonSvg(moon.phase);
+  orb.title = `${moon.name}, ${Math.round(moon.lit * 100)}% lit`;
+  document.body.style.setProperty("--moon-lit", moon.lit.toFixed(3));
+  const strength = 0.45 + 0.55 * moon.lit;
+  stage.light = { ...LIGHTS.night, color: LIGHTS.night.color.map((c) => c * strength) };
+}
+
 let shown = { day: null, period: null };
 
 function render() {
@@ -201,6 +221,7 @@ function render() {
   $("greeting").textContent = greeting;
   $("note").textContent = note;
   stage.light = LIGHTS[period];
+  showMoon(now, period);
 
   if (shown.day !== day.key) {
     const flower = flowerForDay(day.number);
