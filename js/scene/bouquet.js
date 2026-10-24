@@ -96,13 +96,23 @@ function stem(mesh, mat, from, back, spread) {
   if (pts.length > 1) mesh.line(pts, mat);
 }
 
-export function buildBouquet(key, flower) {
+// `colour` picks the colour instead of leaving it to the day: { variety: i }
+// for one of the flower's varieties, or { mix: i } for one of its mixes.
+export function buildBouquet(key, flower, colour) {
   const rnd = seeded(key);
   const mesh = new Mesh();
 
   let tones;
   let title;
-  if (flower.mixes?.length && rnd() < 0.3) {
+  if (colour?.mix !== undefined) {
+    const mix = flower.mixes[colour.mix];
+    tones = mix.of.map((i) => flower.varieties[i]);
+    title = mix.name;
+  } else if (colour?.variety !== undefined) {
+    const variety = flower.varieties[colour.variety];
+    tones = [variety];
+    title = variety.name;
+  } else if (flower.mixes?.length && rnd() < 0.7) {
     const mix = pick(rnd, flower.mixes);
     tones = mix.of.map((i) => flower.varieties[i]);
     title = mix.name;

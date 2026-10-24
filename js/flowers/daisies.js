@@ -11,9 +11,9 @@ import { sum, cross, norm, basis, hexToRgb, mixRgb, smoothstep, hash3 } from "..
 // its radius). Rays: `rays` in each of `layers`, `len` long and `width` wide,
 // leaving the centre at `lean` radians from the face and ending at `droop`.
 const SHAPES = {
-  daisy: { heads: [3, 4], head: 0.5, disc: 0.2, dome: 0.35, rays: 24, layers: 1, len: 0.62, width: 0.05, lean: 1.5, droop: 1.62 },
-  gerbera: { heads: [1, 2], head: 0.85, disc: 0.2, dome: 0.15, rays: 22, layers: 2, len: 0.55, width: 0.055, lean: 1.4, droop: 1.6 },
-  chamomile: { heads: [4, 5], head: 0.32, disc: 0.24, dome: 0.8, rays: 16, layers: 1, len: 0.5, width: 0.06, lean: 1.75, droop: 2.25 },
+  daisy: { heads: [3, 3], head: 0.5, disc: 0.22, dome: 0.35, rays: 15, layers: 1, len: 0.6, width: 0.1, lean: 1.5, droop: 1.62 },
+  gerbera: { heads: [1, 1], head: 0.8, disc: 0.22, dome: 0.15, rays: 15, layers: 2, len: 0.55, width: 0.09, lean: 1.4, droop: 1.6 },
+  chamomile: { heads: [4, 5], head: 0.42, disc: 0.26, dome: 0.8, rays: 12, layers: 1, len: 0.5, width: 0.1, lean: 1.65, droop: 1.95 },
 };
 
 // Light, clear colours so they read against the dark tinted glass card.
@@ -58,8 +58,6 @@ function materials(mesh, v) {
       ks: 0.15,
       shine: 12,
       translucent: 0.45,
-      // rays lie close together, so outline even small overlaps
-      outline: 0.03,
     }),
     // r runs from the middle (0) to the edge (1) of the centre
     disc: mesh.material({
@@ -96,11 +94,9 @@ function ray(mesh, mat, { root, a, r, len, width, th0, th1, tag }) {
       const f = t * N;
       const i = Math.min(N - 1, Math.floor(f));
       const p = sum([spine[i], 1 - (f - i)], [spine[i + 1], f - i]);
-      const th = theta(t);
-      const n = cross(b, sum([a, Math.cos(th)], [r, Math.sin(th)]));
-      // strap-shaped, with a rounded tip
+      // strap-shaped, with a rounded tip; flat, so a ray this thin shades evenly
       const w = width * Math.pow(Math.sin(Math.PI * Math.min(1, t * 0.55 + 0.45 * Math.pow(t, 3))), 0.5) + 0.002;
-      return sum([p, 1], [b, s * w], [n, -0.25 * w * s * s]);
+      return sum([p, 1], [b, s * w]);
     },
     N,
     2,
@@ -169,7 +165,7 @@ function bloom(mesh, mats, v, { center, axis, size, rnd, tag }) {
   for (let j = 0; j < n; j++) {
     // the first head sits in the middle, the rest around it
     const ang = spin + (j * TAU) / Math.max(1, n - 1);
-    const out = j === 0 && n > 2 ? 0 : size * (n > 1 ? 0.42 : 0) * (0.85 + rnd() * 0.3);
+    const out = j === 0 && n > 2 ? 0 : size * (n > 1 ? 0.55 : 0) * (0.85 + rnd() * 0.3);
     const dir = sum([e1, Math.cos(ang)], [e2, Math.sin(ang)]);
     const at = sum([center, 1], [dir, out], [a0, (rnd() - 0.3) * size * 0.25]);
     // heads tip outwards a little, like a real bunch

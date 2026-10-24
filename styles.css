@@ -28,7 +28,7 @@
 
 /* short screens (phones in landscape): drop the footer line, keep the button */
 @media (max-height: 520px) {
-  footer span {
+  footer > span {
     display: none;
   }
   .card {
@@ -334,8 +334,8 @@ h1 {
 }
 
 /* sized from script to a whole number of character cells */
-#art,
-#glow {
+.art,
+.glow {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -343,23 +343,23 @@ h1 {
   display: block;
 }
 
-#art {
+.art {
   --print: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
   filter: var(--print);
 }
 
 /* light from the art spreading into the frosted glass behind it */
-#glow {
+.glow {
   opacity: 0.35;
   filter: blur(12px) saturate(1.5);
   mix-blend-mode: screen;
 }
 
-#art.bloom {
+.art.bloom {
   animation: bloom 1.4s var(--ease) both;
 }
 
-#glow.bloom {
+.glow.bloom {
   animation: glow-in 1.4s var(--ease) both;
 }
 
@@ -423,6 +423,290 @@ button:hover {
 button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* a link that looks like the buttons */
+.pill {
+  font: inherit;
+  color: var(--text);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.25);
+  padding: 6px 14px;
+  transition: background 0.2s ease;
+}
+
+.pill:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --- gallery and flower pages: taller than the screen, so they scroll --- */
+
+html:has(body.scroll),
+body.scroll {
+  height: auto;
+  overflow: auto;
+}
+
+body.scroll {
+  min-height: 100dvh;
+  align-items: flex-start;
+}
+
+body.scroll .card {
+  height: auto;
+  max-height: none;
+  max-width: 1080px;
+  margin: auto 0;
+  text-align: left;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back:hover,
+.back:focus-visible {
+  color: var(--text);
+}
+
+.lede {
+  margin: 8px 0 0;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 14px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* each flower sits on its own small pane, a little lighter than the card */
+.tile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 10px 10px 14px;
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: background 0.25s ease, transform 0.25s var(--ease);
+}
+
+.tile:hover,
+.tile:focus-visible {
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-2px);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tile .stage {
+  flex: none;
+  aspect-ratio: 1 / 1.1;
+}
+
+.tile h2 {
+  margin: 8px 4px 2px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.tile p {
+  margin: 0 4px;
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 4px 0;
+}
+
+.dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+/* --- the PIN form in front of the florist pages --- */
+
+body.locked main {
+  display: none;
+}
+
+body.scroll .gate {
+  max-width: 360px;
+  margin: auto;
+  gap: 12px;
+}
+
+.gate label {
+  font-style: italic;
+  color: var(--muted);
+}
+
+.gate input {
+  font: 600 1.4rem/1 "JetBrains Mono", ui-monospace, Consolas, monospace;
+  letter-spacing: 0.5em;
+  text-align: center;
+  padding: 10px 12px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.gate input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.gate-error {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.gate button {
+  align-self: flex-start;
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.gate.shake {
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    translate: -6px 0;
+  }
+  40%,
+  80% {
+    translate: 6px 0;
+  }
+}
+
+/* --- one flower: the bouquet beside its options --- */
+
+.detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.detail .stage {
+  height: min(72vh, 640px);
+}
+
+.detail figcaption {
+  text-align: center;
+}
+
+.options h1 {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+}
+
+.options h2 {
+  margin: 24px 0 10px;
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.options .chosen {
+  margin: 6px 0 0;
+  font-style: italic;
+  font-size: 1.1rem;
+}
+
+.swatches,
+.times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatches button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: var(--swatch);
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.swatches button:hover {
+  background: var(--swatch);
+  transform: scale(1.08);
+}
+
+.swatches button[aria-pressed="true"] {
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 0 16px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.times button[aria-pressed="true"] {
+  color: #1b1520;
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.options .actions {
+  margin-top: 28px;
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  font-size: 0.74rem;
+}
+
+@media (max-width: 760px) {
+  .detail {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .detail .stage {
+    height: min(58vh, 520px);
+  }
 }
 
 .noscript {

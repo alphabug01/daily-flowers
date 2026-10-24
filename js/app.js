@@ -1,33 +1,19 @@
 import { buildBouquet } from "./scene/bouquet.js";
-import { AsciiRenderer } from "./scene/renderer.js";
+import { BouquetStage, reducedMotion } from "./scene/stage.js";
 import { flowerForDay } from "./flowers/index.js";
 import { PERIODS, periodForHour } from "./messages.js";
 import { seeded, pick } from "./random.js";
-import { moonPhase, moonSvg } from "./moon.js";
+import { applySky } from "./sky.js";
 
 // The bouquet changes at 5 AM, when the morning starts, not at midnight.
 const NEW_BOUQUET_HOUR = 5;
 
-// Light follows the sun and moon drawn in the sky behind the card.
-const LIGHTS = {
-  morning: { dir: [-0.75, 0.4, 0.55], color: [1.0, 0.9, 0.78], ambient: 0.3, ambientColor: [0.95, 0.85, 0.85] },
-  afternoon: { dir: [0.35, 0.85, 0.55], color: [1.0, 0.98, 0.94], ambient: 0.32, ambientColor: [0.85, 0.9, 1.0] },
-  evening: { dir: [0.8, 0.25, 0.5], color: [1.0, 0.72, 0.5], ambient: 0.25, ambientColor: [0.75, 0.65, 0.9] },
-  night: { dir: [0.55, 0.65, 0.5], color: [0.72, 0.8, 1.0], ambient: 0.22, ambientColor: [0.55, 0.6, 0.85] },
-};
-
 const FPS = 15;
-const SWAY = 0.3; // radians the bouquet turns either way
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
-const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canvas = $("art");
-const ctx = canvas.getContext("2d");
-// A small, blurred copy of the art: the light it spreads into the frosted glass.
-const glow = $("glow");
-const glowCtx = glow.getContext("2d");
-const GLOW_SCALE = 0.25;
+const stage = new BouquetStage($("stage"), canvas, $("glow"));
 
 // Preview any day or time with ?date=2026-11-02&hour=19
 function currentTime() {
@@ -56,42 +42,6 @@ function bouquetDay(now) {
   };
 }
 
-// ---- drawing ----
-
-const PITCH = 0.15;
-const CAM_DIST = 9;
-
-// How far the bouquet reaches on screen, measured exactly as the renderer
-// draws it: at every angle of the sway and with perspective.
-function measure(mesh) {
-  const pos = mesh.pos;
-  let yMid = 0;
-  for (let i = 1; i < pos.length; i += 3) yMid += pos[i];
-  yMid /= pos.length / 3;
-  const cp = Math.cos(PITCH);
-  const sp = Math.sin(PITCH);
-  const out = { x: 0, lo: Infinity, hi: -Infinity, yMid };
-  const steps = reducedMotion ? [0] : [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1];
-  for (const s of steps) {
-    const cy = Math.cos(SWAY * s);
-    const sy = Math.sin(SWAY * s);
-    for (let i = 0; i < pos.length; i += 3) {
-      const x1 = pos[i] * cy + pos[i + 2] * sy;
-      const z1 = -pos[i] * sy + pos[i + 2] * cy;
-      const y = pos[i + 1] * cp - z1 * sp;
-      const z = pos[i + 1] * sp + z1 * cp;
-      const f = CAM_DIST / (CAM_DIST - z);
-      out.x = Math.max(out.x, Math.abs(x1 * f));
-      out.lo = Math.min(out.lo, (y - yMid) * f);
-      out.hi = Math.max(out.hi, (y - yMid) * f);
-    }
-  }
-  return out;
-}
-
-const stage = { renderer: null, box: null, light: LIGHTS.morning, font: 10, cellW: 6, cellH: 12, dpr: 1, view: null };
-const colorCache = new Map();
-
 // Keep the page exactly the height of what's visible (mobile address bars
 // grow and shrink the viewport without the CSS units always following).
 function fitViewport() {
@@ -99,110 +49,16 @@ function fitViewport() {
   document.documentElement.style.setProperty("--app-height", `${Math.round(h)}px`);
 }
 
-function layout() {
-  if (!stage.renderer) return;
-  const box = $("stage");
-  const width = box.clientWidth;
-  const height = box.clientHeight;
-  if (!width || !height) return;
-  const font = Math.min(width, height) < 420 ? 6 : 8;
-  const cellW = font * 0.6;
-  const cellH = font * 1.2;
-  const cols = Math.max(20, Math.floor(width / cellW));
-  const rows = Math.max(10, Math.floor(height / cellH));
-  const wpx = cols * cellW;
-  const hpx = rows * cellH;
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-
-  canvas.style.width = `${wpx}px`;
-  canvas.style.height = `${hpx}px`;
-  canvas.width = Math.round(wpx * dpr);
-  canvas.height = Math.round(hpx * dpr);
-  glow.style.width = canvas.style.width;
-  glow.style.height = canvas.style.height;
-  glow.width = Math.max(1, Math.round(wpx * GLOW_SCALE));
-  glow.height = Math.max(1, Math.round(hpx * GLOW_SCALE));
-  Object.assign(stage, { font, cellW, cellH, dpr });
-  // fit the bouquet with a one-cell margin on every side
-  const m = stage.box;
-  const scale = Math.min((wpx - 2 * cellW) / (2 * m.x), (hpx - 2 * cellH) / (m.hi - m.lo));
-  stage.view = {
-    cellW,
-    cellH,
-    scale,
-    cx: wpx / 2,
-    cy: hpx / 2 + ((m.hi + m.lo) / 2) * scale,
-    yMid: m.yMid,
-    camDist: CAM_DIST,
-    pitch: PITCH,
-    yaw: 0,
-  };
-  stage.renderer.resize(cols, rows);
-}
-
-function paint() {
-  const r = stage.renderer;
-  ctx.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = `${stage.font}px "JetBrains Mono", ui-monospace, Consolas, monospace`;
-  ctx.textBaseline = "top";
-  const yOffset = (stage.cellH - stage.font) / 2;
-  for (let row = 0; row < r.rows; row++) {
-    for (let col = 0; col < r.cols; col++) {
-      const idx = row * r.cols + col;
-      const ch = r.chars[idx];
-      if (ch === " ") continue;
-      const o = idx * 3;
-      const key = ((r.rgb[o] >> 2) << 12) | ((r.rgb[o + 1] >> 2) << 6) | (r.rgb[o + 2] >> 2);
-      let style = colorCache.get(key);
-      if (!style) {
-        style = `rgb(${r.rgb[o]},${r.rgb[o + 1]},${r.rgb[o + 2]})`;
-        colorCache.set(key, style);
-      }
-      ctx.fillStyle = style;
-      ctx.fillText(ch, col * stage.cellW, row * stage.cellH + yOffset);
-    }
-  }
-  glowCtx.clearRect(0, 0, glow.width, glow.height);
-  glowCtx.drawImage(canvas, 0, 0, glow.width, glow.height);
-}
-
-function frame(time) {
-  if (!stage.renderer || !stage.view) return;
-  stage.view.yaw = reducedMotion ? 0 : SWAY * Math.sin(time / 1000 * 0.35);
-  stage.renderer.render(stage.view, stage.light);
-  paint();
-}
-
 let last = 0;
 function loop(time) {
   if (!document.hidden && time - last >= 1000 / FPS) {
     last = time;
-    frame(time);
+    stage.frame(time);
   }
   if (!reducedMotion) requestAnimationFrame(loop);
 }
 
 // ---- page content ----
-
-const orb = document.querySelector(".orb");
-
-// At night the orb is the moon in tonight's phase, and moonlight on the
-// bouquet and the glass is as strong as the moon is full.
-function showMoon(now, period) {
-  if (period !== "night") {
-    orb.innerHTML = "";
-    orb.removeAttribute("title");
-    document.body.style.removeProperty("--moon-lit");
-    return;
-  }
-  const moon = moonPhase(now);
-  orb.innerHTML = moonSvg(moon.phase);
-  orb.title = `${moon.name}, ${Math.round(moon.lit * 100)}% lit`;
-  document.body.style.setProperty("--moon-lit", moon.lit.toFixed(3));
-  const strength = 0.45 + 0.55 * moon.lit;
-  stage.light = { ...LIGHTS.night, color: LIGHTS.night.color.map((c) => c * strength) };
-}
 
 let shown = { day: null, period: null };
 
@@ -215,36 +71,27 @@ function render() {
   const { greeting, notes } = PERIODS[period];
   const note = pick(seeded(`${day.key}|${period}`), notes);
 
-  document.body.dataset.period = period;
   document.title = `${greeting} · Daily Flowers`;
   $("date").textContent = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
   $("greeting").textContent = greeting;
   $("note").textContent = note;
-  stage.light = LIGHTS[period];
-  showMoon(now, period);
+  stage.light = applySky(period, now);
 
   if (shown.day !== day.key) {
     const flower = flowerForDay(day.number);
     const bouquet = buildBouquet(`${flower.id}|${day.key}`, flower);
-    stage.renderer = new AsciiRenderer(bouquet.mesh);
-    stage.box = measure(bouquet.mesh);
-    layout();
+    stage.setMesh(bouquet.mesh);
     canvas.setAttribute("aria-label", `ASCII art bouquet of ${bouquet.title} wrapped in ${bouquet.wrapName}`);
     $("caption").textContent = `Today's bouquet: ${bouquet.title}, wrapped in ${bouquet.wrapName} with ${/^[aeiou]/.test(bouquet.ribbonName) ? "an" : "a"} ${bouquet.ribbonName} ribbon`;
-
-    for (const el of [canvas, glow]) {
-      el.classList.remove("bloom");
-      void el.offsetWidth; // restart the fade-in
-      el.classList.add("bloom");
-    }
+    stage.bloom();
   }
 
   shown = { day: day.key, period };
-  frame(performance.now());
+  stage.frame(performance.now());
 }
 
 $("copy").addEventListener("click", async () => {
-  const text = `${stage.renderer.text()}\n\n${$("greeting").textContent}! ${$("note").textContent}`;
+  const text = `${stage.text()}\n\n${$("greeting").textContent}! ${$("note").textContent}`;
   try {
     await navigator.clipboard.writeText(text);
     $("copy").textContent = "copied ✿";
@@ -259,8 +106,8 @@ function onResize() {
   fitViewport();
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    layout();
-    frame(performance.now());
+    stage.layout();
+    stage.frame(performance.now());
   }, 120);
 }
 window.addEventListener("resize", onResize);
@@ -277,5 +124,5 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) render();
 });
 // redraw once the web font is ready so the first frame isn't in a fallback font
-document.fonts?.ready.then(() => frame(performance.now()));
+document.fonts?.ready.then(() => stage.frame(performance.now()));
 requestAnimationFrame(loop);

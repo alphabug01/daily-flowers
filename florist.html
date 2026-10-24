@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Florist · Daily Flowers</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+    <link rel="apple-touch-icon" href="icons/icon-180.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="scroll locked" data-period="morning">
+    <div class="sky" aria-hidden="true">
+      <div class="orb"></div>
+      <div class="stars"><span></span><span></span><span></span></div>
+    </div>
+
+    <main class="card">
+      <header>
+        <a class="back" href="./">← today's bouquet</a>
+        <h1>Florist</h1>
+        <p class="lede">Every flower the bouquet rotates through. Pick one to see it in each colour and at any time of day.</p>
+      </header>
+
+      <ul class="grid" id="grid"></ul>
+    </main>
+
+    <noscript><p class="noscript">Turn on JavaScript to see the flowers.</p></noscript>
+    <script type="module" src="js/florist.js"></script>
+  </body>
+</html>
