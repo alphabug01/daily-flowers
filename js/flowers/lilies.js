@@ -52,8 +52,8 @@ const varieties = [
   },
   {
     name: "Lavender Dream lilies", shape: "oriental",
-    petal: "#a77bf0", edge: "#f1e8ff", edgeAmt: 0.75, throat: "#fff3c4",
-    stripe: "#8452d8", spot: "#5a2cb0", spots: 0.2, anther: "#b0521e", bud: "#c4a6f0",
+    petal: "#c7a4ff", edge: "#f4ecff", edgeAmt: 0.75, throat: "#fff3c4",
+    stripe: "#a27af5", spot: "#6a3cc8", spots: 0.2, anther: "#b0521e", bud: "#d6c0ff",
   },
   {
     name: "Pink Perfection lilies", shape: "trumpet",

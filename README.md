@@ -1,7 +1,7 @@
 # Daily Flowers 💐
 
-A new ASCII lily bouquet every morning, with a greeting and a short sweet note
-that changes through the day.
+A new ASCII bouquet of lilies or lavender every morning, with a greeting and a
+short sweet note that changes through the day.
 
 | Time        | Greeting       |
 | ----------- | -------------- |
@@ -11,8 +11,9 @@ that changes through the day.
 | 9pm – 5am   | Good night     |
 
 The bouquet is a small 3D scene rendered as ASCII art. Each lily is modelled
-with curved, recurving petals, stamens and a pistil, set among buds, leaves and
-baby's breath in a crinkled paper cone tied with a satin bow. A tiny software
+with curved, recurving petals, stamens and a pistil; each sprig of lavender is a
+spike of tiny florets in whorls. They sit among buds, leaves and baby's breath
+in a crinkled paper cone tied with a satin bow. A tiny software
 renderer lights it (with shadows) and turns every cell's brightness into a
 character, so it looks shaded and solid. It sways gently, and the light follows
 the time of day: warm sun from the left in the morning, bright overhead light in
@@ -20,7 +21,8 @@ the afternoon, orange sunset light from the right in the evening, and cool
 moonlight at night.
 
 It's generated from the date, so everyone sees the same bouquet on a given day,
-and it changes at 5am. Each day picks a lily variety (or a mix), one of several
+and it changes at 5am. The flower alternates day by day between lilies and
+lavender, and each day picks a variety (or a mix), one of several
 arrangements, wrapping paper and ribbon.
 
 It's a plain static site with no build step and no dependencies.
@@ -59,6 +61,7 @@ npx vercel --prod   # deploy to production
 ## Where things live
 
 - `js/flowers/lilies.js` holds the lily varieties, their colours and shapes, and the 3D models of a bloom and a bud.
+- `js/flowers/lavender.js` does the same for lavender: varieties, and the 3D models of a bunch of spikes and a bud.
 - `js/scene/bouquet.js` arranges the bouquet: flowers, leaves, baby's breath, paper and bow.
 - `js/scene/renderer.js` turns the 3D scene into coloured characters, with lighting, shadows and auto exposure.
 - `js/messages.js` holds the greetings and notes, plus the hours for each part of the day.
@@ -69,7 +72,7 @@ npx vercel --prod   # deploy to production
 
 Make a file like `js/flowers/lilies.js` (say `roses.js`) that exports the same
 things (`varieties`, `mixes`, `materials`, `bloom`, `bud`), then add it to the
-list in `js/flowers/index.js`. With more than one flower in the list, the site
-rotates through them day by day.
+list in `js/flowers/index.js`. The site rotates through the flowers in that list
+day by day.
 # daily-flowers
 # daily-flowers

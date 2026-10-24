@@ -23,6 +23,10 @@ const params = new URLSearchParams(location.search);
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canvas = $("art");
 const ctx = canvas.getContext("2d");
+// A small, blurred copy of the art: the light it spreads into the frosted glass.
+const glow = $("glow");
+const glowCtx = glow.getContext("2d");
+const GLOW_SCALE = 0.25;
 
 // Preview any day or time with ?date=2026-11-02&hour=19
 function currentTime() {
@@ -53,6 +57,37 @@ function bouquetDay(now) {
 
 // ---- drawing ----
 
+const PITCH = 0.15;
+const CAM_DIST = 9;
+
+// How far the bouquet reaches on screen, measured exactly as the renderer
+// draws it: at every angle of the sway and with perspective.
+function measure(mesh) {
+  const pos = mesh.pos;
+  let yMid = 0;
+  for (let i = 1; i < pos.length; i += 3) yMid += pos[i];
+  yMid /= pos.length / 3;
+  const cp = Math.cos(PITCH);
+  const sp = Math.sin(PITCH);
+  const out = { x: 0, lo: Infinity, hi: -Infinity, yMid };
+  const steps = reducedMotion ? [0] : [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1];
+  for (const s of steps) {
+    const cy = Math.cos(SWAY * s);
+    const sy = Math.sin(SWAY * s);
+    for (let i = 0; i < pos.length; i += 3) {
+      const x1 = pos[i] * cy + pos[i + 2] * sy;
+      const z1 = -pos[i] * sy + pos[i + 2] * cy;
+      const y = pos[i + 1] * cp - z1 * sp;
+      const z = pos[i + 1] * sp + z1 * cp;
+      const f = CAM_DIST / (CAM_DIST - z);
+      out.x = Math.max(out.x, Math.abs(x1 * f));
+      out.lo = Math.min(out.lo, (y - yMid) * f);
+      out.hi = Math.max(out.hi, (y - yMid) * f);
+    }
+  }
+  return out;
+}
+
 const stage = { renderer: null, box: null, light: LIGHTS.morning, font: 10, cellW: 6, cellH: 12, dpr: 1, view: null };
 const colorCache = new Map();
 
@@ -82,17 +117,23 @@ function layout() {
   canvas.style.height = `${hpx}px`;
   canvas.width = Math.round(wpx * dpr);
   canvas.height = Math.round(hpx * dpr);
+  glow.style.width = canvas.style.width;
+  glow.style.height = canvas.style.height;
+  glow.width = Math.max(1, Math.round(wpx * GLOW_SCALE));
+  glow.height = Math.max(1, Math.round(hpx * GLOW_SCALE));
   Object.assign(stage, { font, cellW, cellH, dpr });
+  // fit the bouquet with a one-cell margin on every side
+  const m = stage.box;
+  const scale = Math.min((wpx - 2 * cellW) / (2 * m.x), (hpx - 2 * cellH) / (m.hi - m.lo));
   stage.view = {
     cellW,
     cellH,
-    // fit the bouquet: the side-to-side reach is generous because it sways
-    scale: Math.min(wpx / ((stage.box.maxX - stage.box.minX) * 0.82), hpx / ((stage.box.maxY - stage.box.minY) * 1.06)),
+    scale,
     cx: wpx / 2,
-    cy: hpx / 2,
-    yMid: (stage.box.maxY + stage.box.minY) / 2,
-    camDist: 9,
-    pitch: 0.15,
+    cy: hpx / 2 + ((m.hi + m.lo) / 2) * scale,
+    yMid: m.yMid,
+    camDist: CAM_DIST,
+    pitch: PITCH,
     yaw: 0,
   };
   stage.renderer.resize(cols, rows);
@@ -121,6 +162,8 @@ function paint() {
       ctx.fillText(ch, col * stage.cellW, row * stage.cellH + yOffset);
     }
   }
+  glowCtx.clearRect(0, 0, glow.width, glow.height);
+  glowCtx.drawImage(canvas, 0, 0, glow.width, glow.height);
 }
 
 function frame(time) {
@@ -163,14 +206,16 @@ function render() {
     const flower = flowerForDay(day.number);
     const bouquet = buildBouquet(`${flower.id}|${day.key}`, flower);
     stage.renderer = new AsciiRenderer(bouquet.mesh);
-    stage.box = bouquet.box;
+    stage.box = measure(bouquet.mesh);
     layout();
     canvas.setAttribute("aria-label", `ASCII art bouquet of ${bouquet.title} wrapped in ${bouquet.wrapName}`);
     $("caption").textContent = `Today's bouquet: ${bouquet.title}, wrapped in ${bouquet.wrapName} with ${/^[aeiou]/.test(bouquet.ribbonName) ? "an" : "a"} ${bouquet.ribbonName} ribbon`;
 
-    canvas.classList.remove("bloom");
-    void canvas.offsetWidth; // restart the fade-in
-    canvas.classList.add("bloom");
+    for (const el of [canvas, glow]) {
+      el.classList.remove("bloom");
+      void el.offsetWidth; // restart the fade-in
+      el.classList.add("bloom");
+    }
   }
 
   shown = { day: day.key, period };

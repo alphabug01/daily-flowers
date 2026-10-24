@@ -6,7 +6,11 @@
   --orb-x: 18%;
   --orb-y: 78%;
   --accent: #ffcf9e;
-  --card: rgba(24, 18, 30, 0.78);
+  --card: rgba(24, 18, 30, 0.76);
+  /* where the sun or moon glints on the glass, and how strongly */
+  --glare-x: 12%;
+  --glare-y: 20%;
+  --glare: 0.16;
   --text: #f6efe6;
   --muted: #b9adb8;
   --stars: 0;
@@ -40,6 +44,8 @@ body[data-period="morning"] {
   --orb-x: 16%;
   --orb-y: 72%;
   --accent: #ffc79a;
+  --glare-x: 8%;
+  --glare-y: 30%;
 }
 
 body[data-period="afternoon"] {
@@ -50,6 +56,9 @@ body[data-period="afternoon"] {
   --orb-x: 78%;
   --orb-y: 10%;
   --accent: #ffe08a;
+  --glare-x: 82%;
+  --glare-y: 0%;
+  --glare: 0.2;
 }
 
 body[data-period="evening"] {
@@ -61,6 +70,9 @@ body[data-period="evening"] {
   --orb-y: 82%;
   --accent: #ffad80;
   --stars: 0.35;
+  --glare-x: 96%;
+  --glare-y: 78%;
+  --glare: 0.13;
 }
 
 body[data-period="night"] {
@@ -71,8 +83,11 @@ body[data-period="night"] {
   --orb-x: 82%;
   --orb-y: 12%;
   --accent: #b8c4ff;
-  --card: rgba(10, 12, 28, 0.72);
+  --card: rgba(10, 12, 28, 0.7);
   --stars: 1;
+  --glare-x: 86%;
+  --glare-y: 4%;
+  --glare: 0.07;
 }
 
 * {
@@ -166,11 +181,15 @@ body[data-period="night"] .orb {
   }
 }
 
-/* --- card --- */
+/* --- card: a pane of tinted, lightly frosted glass ---
+   The text and art are printed on its front face: they cast a faint shadow
+   onto the glass, bright art spreads a little light into the frost, and the
+   glare from the sun or moon lies over everything. */
 
 .card {
   position: relative;
   z-index: 1;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -179,11 +198,58 @@ body[data-period="night"] .orb {
   max-height: 1000px;
   padding: var(--pad);
   border-radius: 24px;
-  background: var(--card);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background:
+    /* frost grain */
+    url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.85%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.07 0 0 0 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E"),
+    /* the pane catches a little more light towards the top */
+    linear-gradient(170deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 40%),
+    linear-gradient(var(--card), var(--card));
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.18),
+    /* thickness: a lit bevel along the top, a darker edge along the bottom */
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 40px rgba(255, 255, 255, 0.03);
   text-align: center;
+}
+
+/* the polished rim, brightest on the corner facing the light */
+.card::before,
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.card::before {
+  padding: 1px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.04) 35%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.14));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+/* glare on the surface, over the print */
+.card::after {
+  z-index: 2;
+  background:
+    radial-gradient(90% 60% at var(--glare-x) var(--glare-y), rgba(255, 255, 255, var(--glare)), transparent 55%),
+    linear-gradient(118deg, transparent 32%, rgba(255, 255, 255, calc(var(--glare) * 0.35)) 40%, transparent 47%);
+  mix-blend-mode: screen;
+  transition: background 1.2s ease;
+}
+
+/* text printed on the glass leaves a faint shadow on it */
+header,
+figcaption,
+footer {
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
 }
 
 header,
@@ -207,6 +273,7 @@ h1 {
   font-size: clamp(1.6rem, min(7vw, 5.5vh), 3rem);
   line-height: 1.1;
   color: var(--accent);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 0 28px color-mix(in srgb, var(--accent) 35%, transparent);
   transition: color 1.2s ease;
 }
 
@@ -236,7 +303,8 @@ h1 {
 }
 
 /* sized from script to a whole number of character cells */
-#art {
+#art,
+#glow {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -244,20 +312,42 @@ h1 {
   display: block;
 }
 
+#art {
+  --print: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
+  filter: var(--print);
+}
+
+/* light from the art spreading into the frosted glass behind it */
+#glow {
+  opacity: 0.35;
+  filter: blur(12px) saturate(1.5);
+  mix-blend-mode: screen;
+}
+
 #art.bloom {
   animation: bloom 1.4s var(--ease) both;
+}
+
+#glow.bloom {
+  animation: glow-in 1.4s var(--ease) both;
 }
 
 @keyframes bloom {
   from {
     opacity: 0;
     transform: scale(0.97);
-    filter: blur(3px);
+    filter: blur(3px) var(--print);
   }
   to {
     opacity: 1;
     transform: none;
-    filter: none;
+    filter: blur(0) var(--print);
+  }
+}
+
+@keyframes glow-in {
+  from {
+    opacity: 0;
   }
 }
 
@@ -275,7 +365,9 @@ footer {
   justify-content: center;
   margin-top: min(16px, 1.6vh);
   padding-top: min(14px, 1.4vh);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  /* a line etched into the glass: a dark groove with a lit lip below it */
+  border-top: 1px solid rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
   font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
   font-size: 0.74rem;
   color: var(--muted);
@@ -287,6 +379,7 @@ button {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.25);
   padding: 6px 14px;
   cursor: pointer;
   transition: background 0.2s ease;

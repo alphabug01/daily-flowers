@@ -39,6 +39,9 @@ const ARRANGEMENTS = [
   ],
 ];
 
+// Default papers and ribbons. A flower can bring its own lists instead
+// (`wraps`, `ribbons`) so the paper sets off its colours rather than clashing.
+// `pattern` is one of the kinds in paperPattern() below.
 const WRAPS = [
   { name: "kraft paper", paper: "#c49565", tissue: "#f3ead8", pattern: "fibre" },
   { name: "blush tissue", paper: "#e9a7b8", tissue: "#fff4f6", pattern: "dots" },
@@ -108,8 +111,8 @@ export function buildBouquet(key, flower) {
     tones = [variety];
     title = variety.name;
   }
-  const wrap = pick(rnd, WRAPS);
-  const ribbon = pick(rnd, RIBBONS);
+  const wrap = pick(rnd, flower.wraps ?? WRAPS);
+  const ribbon = pick(rnd, flower.ribbons ?? RIBBONS);
   const toneMats = tones.map((t) => flower.materials(mesh, t));
 
   const stemMat = mesh.material({ color: () => hexToRgb("#4f9a3c"), ks: 0.25, shine: 12 });
@@ -260,16 +263,7 @@ export function buildBouquet(key, flower) {
     return [knot[0] + 0.07 * Math.sin(ph2) * Math.cos(th), knot[1] + 0.06 * Math.sin(ph2) * Math.sin(th), knot[2] + 0.04 * Math.cos(ph2) + 0.02];
   }, 10, 6, ribbonMat);
 
-  // Bounding box, so the page can fit the whole bouquet in view.
   mesh.finish();
-  const box = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
-  for (let i = 0; i < mesh.pos.length; i += 3) {
-    const reach = Math.hypot(mesh.pos[i], mesh.pos[i + 2]); // any x it can reach while swaying
-    box.minX = Math.min(box.minX, -reach);
-    box.maxX = Math.max(box.maxX, reach);
-    box.minY = Math.min(box.minY, mesh.pos[i + 1]);
-    box.maxY = Math.max(box.maxY, mesh.pos[i + 1]);
-  }
 
-  return { mesh, box, title, wrapName: wrap.name, ribbonName: ribbon.name };
+  return { mesh, title, wrapName: wrap.name, ribbonName: ribbon.name };
 }
