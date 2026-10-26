@@ -343,16 +343,13 @@ h1 {
   display: block;
 }
 
-.art {
-  --print: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
-  filter: var(--print);
-}
+/* The canvases use no filter or blend mode: some iOS versions paint a canvas
+   with those inside a backdrop-filter card as a solid white box. */
 
-/* light from the art spreading into the frosted glass behind it */
+/* light from the art spreading into the frosted glass behind it; the canvas is
+   drawn at a quarter size, so scaling it up softens it without a blur filter */
 .glow {
   opacity: 0.35;
-  filter: blur(12px) saturate(1.5);
-  mix-blend-mode: screen;
 }
 
 .art.bloom {
@@ -367,12 +364,10 @@ h1 {
   from {
     opacity: 0;
     transform: scale(0.97);
-    filter: blur(3px) var(--print);
   }
   to {
     opacity: 1;
     transform: none;
-    filter: blur(0) var(--print);
   }
 }
 
